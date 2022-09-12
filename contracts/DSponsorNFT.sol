@@ -135,12 +135,34 @@ contract DSponsorNFT is
 
         if (amount > 0) {
             if (currency == address(0)) Address.sendValue(TREASURY, amount);
-            else
-                IERC20(currency).safeTransferFrom(
-                    _msgSender(),
-                    TREASURY,
-                    amount
+            else {
+                IERC20 currencyERC20 = IERC20(currency);
+
+                /*
+                uint256 balanceOfMsgSender = currencyERC20.balanceOf(
+                    _msgSender()
                 );
+                uint256 balanceOfTreasury = currencyERC20.balanceOf(TREASURY);
+                */
+
+                currencyERC20.safeTransferFrom(_msgSender(), TREASURY, amount);
+
+                /*
+                 * @dev We decide to remove intensive checks.
+                 * Controller is responsible to set
+                 * a valid contract as currency.
+                 * This function could work (but not as expected)
+                 * with some contract as ERC721 compliant (tokenId as amount)
+                 */
+                /*
+                if (
+                    (currencyERC20.balanceOf(_msgSender()) !=
+                        (balanceOfMsgSender - amount)) ||
+                    (currencyERC20.balanceOf(TREASURY) !=
+                        (balanceOfTreasury + amount))
+                ) revert InvalidERC20Transfer();            
+                */
+            }
         }
 
         uint256 tokenId = totalSupply();
@@ -306,7 +328,8 @@ contract DSponsorNFT is
     }
 
     function _safeMint(address to, uint256 tokenId) internal override(ERC721) {
-        if (MAX_SUPPLY <= tokenId) revert InvalidTokenId(tokenId);
+        // @dev _safeMint is called by payAndMint() only, tokenId is from Counters.Counter
+        if (MAX_SUPPLY <= tokenId) revert MaxSupplyExceeded();
 
         super._safeMint(to, tokenId);
         _tokenIds.increment();

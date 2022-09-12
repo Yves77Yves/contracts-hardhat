@@ -1,10 +1,11 @@
+const { ethers } = require('hardhat')
 const {
-  time,
+  // time,
   loadFixture
 } = require('@nomicfoundation/hardhat-network-helpers')
-const { anyValue } = require('@nomicfoundation/hardhat-chai-matchers/withArgs')
+// const { anyValue } = require('@nomicfoundation/hardhat-chai-matchers/withArgs')
 const { expect } = require('chai')
-const { keccak256, toUtf8Bytes, toUtf8String } = require('ethers/lib/utils')
+// const { keccak256, toUtf8Bytes, toUtf8String } = require('ethers/lib/utils')
 const { constants } = require('@openzeppelin/test-helpers')
 
 describe('DSponsor', function () {
@@ -15,19 +16,14 @@ describe('DSponsor', function () {
     const [deployer, sponsee, sponsor1, sponsor2, user1, user2] =
       await ethers.getSigners()
 
-    const properties = ['SQUARE_IMG', 'URL']
-    const propValues = ['https://image.png', 'https://web.link']
-
     const ERC20MockDeployer = await ethers.getContractFactory('ERC20Mock')
     const ERC20Mock = await ERC20MockDeployer.deploy()
 
+    const properties = ['SQUARE_IMG', 'URL']
+    const propValues = ['https://image.png', 'https://web.link']
+
     const ERC721MockDeployer = await ethers.getContractFactory('ERC721Mock')
     const ERC721Mock = await ERC721MockDeployer.deploy()
-
-    const DSponsorFactoryDeployer = await ethers.getContractFactory(
-      'DSponsorFactory'
-    )
-    const DSponsorFactory = await DSponsorFactoryDeployer.deploy()
 
     const DSponsorDeployer = await ethers.getContractFactory('DSponsor')
     const DSponsorContract = await DSponsorDeployer.deploy(
@@ -89,7 +85,6 @@ describe('DSponsor', function () {
 
       ERC20Mock,
       ERC721Mock,
-      DSponsorFactory,
       DSponsorContract,
       DSponsorDeployer,
 
@@ -100,16 +95,20 @@ describe('DSponsor', function () {
   }
 
   describe('DSponsor Deployment', async function () {
+    it('Sets with provided nft contract', async function () {
+      const { ERC721Mock, DSponsorContract } = await loadFixture(initFixture)
+
+      expect(await DSponsorContract.getAccessContract()).to.be.equal(
+        ERC721Mock.address
+      )
+    })
+
     it('Reverts if sponsee is zero address', async function () {
-      const { ERC721Mock, DSponsorFactory, DSponsorContract } =
+      const { ERC721Mock, DSponsorDeployer, DSponsorContract } =
         await loadFixture(initFixture)
 
       await expect(
-        DSponsorFactory.createFromContract(
-          ERC721Mock.address,
-          '',
-          constants.ZERO_ADDRESS
-        )
+        DSponsorDeployer.deploy(ERC721Mock.address, '', constants.ZERO_ADDRESS)
       ).to.be.revertedWithCustomError(
         DSponsorContract,
         'SponseeCannotBeZeroAddress'
@@ -121,16 +120,12 @@ describe('DSponsor', function () {
         sponsee,
 
         ERC20Mock,
-        DSponsorFactory,
+        DSponsorDeployer,
         DSponsorContract
       } = await loadFixture(initFixture)
 
       await expect(
-        DSponsorFactory.createFromContract(
-          ERC20Mock.address,
-          '',
-          sponsee.address
-        )
+        DSponsorDeployer.deploy(ERC20Mock.address, '', sponsee.address)
       ).to.be.revertedWithCustomError(DSponsorContract, 'isNotERC721Contract')
     })
   })
@@ -351,6 +346,7 @@ describe('DSponsor', function () {
         DSponsorContract.connect(sponsor1).setProperty(properties[0], false)
       ).to.be.reverted
 
+      let tx
       tx = await DSponsorContract.connect(sponsee).grantRole(
         SET_PROPERTIES_ROLE,
         user1.address
@@ -507,6 +503,7 @@ describe('DSponsor', function () {
       ).to.be.reverted
       // .to.be.revertedWith(`AccessControl: account ${user2.address} is missing role ${VALIDATE_ROLE}`)
 
+      let tx
       tx = await DSponsorContract.connect(sponsee).grantRole(
         VALIDATE_ROLE,
         user2.address
@@ -530,14 +527,9 @@ describe('DSponsor', function () {
     })
 
     it('Protects against invalid data validation', async function () {
-      const {
-        sponsee,
-        user2,
-        sponsor1,
-        properties,
-        DSponsorContract,
-        VALIDATE_ROLE
-      } = await loadFixture(initFixture)
+      const { sponsee, properties, DSponsorContract } = await loadFixture(
+        initFixture
+      )
 
       const reason = 'this is a reject reason'
 

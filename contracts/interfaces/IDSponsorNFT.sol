@@ -10,6 +10,8 @@ interface IDSponsorNFTBase {
     error ForbiddenCurrency(address currency);
     error ForbiddenControllerOperation();
     error InvalidTokenId(uint256 tokenId);
+    error InvalidERC20Transfer();
+    error MaxSupplyExceeded();
 
     error MaxSupplyShouldBeGreaterThan0();
 
