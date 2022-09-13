@@ -8,15 +8,15 @@ import "./DSponsorTreasuryFactory.sol";
 /**
  * @title DSponsor main contract
  * @author Anthony Gourraud
- * @notice To use to create {DSponsor} and {DSponsorNFT} contracts,
- * as events record guarantees a follow up on activities with the prototcol
+ * @notice Use this contract to create {DSponsor} and {DSponsorNFT} instances,
+ * events record guarantees a follow up on activities with the prototcol
  */
-contract DSponsorFactory {
+contract DSponsorMain {
     DSponsorNFTFactory nftFactory = new DSponsorNFTFactory();
     DSponsorTreasuryFactory treasuryFactory = new DSponsorTreasuryFactory();
 
     /* ****************
-     *  EVENTS DECLARATIONSS
+     *  EVENTS DECLARATIONS
      *****************/
 
     event NewDSponsor(
@@ -67,7 +67,6 @@ contract DSponsorFactory {
      *
      * @param rulesURI Document with sponsoring conditions. IPFS or Arweave links recommended
      * @param sponsee Controller who administrate sponsoring and will be able to withdraw funds from sales
-     *
      *
      * Emits {NewDSponsor} and {NewDSponsorNFT} events
      */
