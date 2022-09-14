@@ -6,16 +6,233 @@ const {
 // const { anyValue } = require('@nomicfoundation/hardhat-chai-matchers/withArgs')
 const { expect } = require('chai')
 // const { keccak256, toUtf8Bytes, toUtf8String } = require('ethers/lib/utils')
-const { constants } = require('@openzeppelin/test-helpers')
+// const { constants } = require('@openzeppelin/test-helpers')
 const { BigNumber } = require('ethers')
+const { ZERO_ADDRESS } = require('@openzeppelin/test-helpers/src/constants')
+const { parseEther } = require('ethers/lib/utils')
 
-async function testDSponsoTests({
+async function DSponsorNFTTests({
+  PaymentSplitterMockDeployer,
+  DSponsorNFTDeployer,
+
   creationTx,
+
+  sponsee,
+  sponsor1,
+  sponsor2,
+
+  ERC20Mock,
+  ERC20Amount,
+
+  protocolFee,
+  protocolAddress
+}) {
+  const { args } = creationTx.events.find((e) => e.event === 'NewDSponsorNFT')
+
+  const DSponsorNFTAddress = args[0]
+  const treasuryAddress = args[2]
+
+  const DSponsorNFTContract = await DSponsorNFTDeployer.attach(
+    DSponsorNFTAddress
+  )
+
+  expect(await DSponsorNFTContract.getController()).to.be.equal(sponsee.address)
+
+  await expect(
+    DSponsorNFTContract.setPrice(ERC20Mock.address, true, ERC20Amount)
+  ).to.be.revertedWithCustomError(
+    DSponsorNFTContract,
+    'ForbiddenControllerOperation'
+  )
+
+  /**
+   * ERC20 transactions
+   */
+
+  await expect(
+    DSponsorNFTContract.connect(sponsee).setPrice(
+      ERC20Mock.address,
+      true,
+      ERC20Amount
+    )
+  )
+    .to.emit(DSponsorNFTContract, 'MintPriceChange')
+    .withArgs(ERC20Mock.address, true, ERC20Amount)
+
+  let tx = await ERC20Mock.connect(sponsor1).approve(
+    DSponsorNFTContract.address,
+    ERC20Amount * 20
+  )
+  await tx.wait()
+  tx = await ERC20Mock.connect(sponsor2).approve(
+    DSponsorNFTContract.address,
+    ERC20Amount * 20
+  )
+  await tx.wait()
+
+  await expect(
+    DSponsorNFTContract.connect(sponsor1).payAndMint(
+      ERC20Mock.address,
+      sponsor1.address,
+      ''
+    )
+  )
+    .to.emit(DSponsorNFTContract, 'Mint')
+    .withArgs(
+      ERC20Mock.address,
+      ERC20Amount,
+      sponsor1.address,
+      '',
+      sponsor1.address,
+      0
+    )
+
+  await expect(
+    DSponsorNFTContract.connect(sponsor1).payAndMint(
+      ERC20Mock.address,
+      sponsor1.address,
+      ''
+    )
+  ).to.changeTokenBalances(DSponsorNFTContract, [sponsor1.address], [1])
+
+  await expect(
+    DSponsorNFTContract.connect(sponsor2).payAndMint(
+      ERC20Mock.address,
+      sponsor2.address,
+      ''
+    )
+  ).to.changeTokenBalances(ERC20Mock, [sponsor2.address], [-ERC20Amount])
+
+  const TreasuryContract = await PaymentSplitterMockDeployer.attach(
+    treasuryAddress
+  )
+
+  expect(
+    await TreasuryContract['releasable(address,address)'](
+      ERC20Mock.address,
+      sponsor1.address
+    )
+  ).to.be.equal(0)
+
+  const expectedERC20AmountForSponsee =
+    3 * ERC20Amount * (1 - protocolFee / 100)
+  const expectedERC20AmountForSponseeBigNumber = BigNumber.from(
+    expectedERC20AmountForSponsee
+  )
+  const expectedERC20AmountForProtocol = 3 * ERC20Amount * (protocolFee / 100)
+  const expectedERC20AmountForProtocolBigNumber = BigNumber.from(
+    expectedERC20AmountForProtocol
+  )
+
+  await expect(
+    TreasuryContract.connect(sponsee)['release(address,address)'](
+      ERC20Mock.address,
+      sponsee.address
+    )
+  ).to.changeTokenBalances(
+    ERC20Mock,
+    [treasuryAddress, sponsee],
+    [
+      -expectedERC20AmountForSponseeBigNumber,
+      expectedERC20AmountForSponseeBigNumber
+    ]
+  )
+
+  await expect(
+    TreasuryContract.connect(sponsee)['release(address,address)'](
+      ERC20Mock.address,
+      sponsee.address
+    )
+  ).to.be.revertedWith('PaymentSplitter: account is not due payment')
+
+  expect(
+    await TreasuryContract['releasable(address,address)'](
+      ERC20Mock.address,
+      protocolAddress
+    )
+  ).to.be.equal(expectedERC20AmountForProtocol)
+
+  await expect(
+    TreasuryContract['release(address,address)'](
+      ERC20Mock.address,
+      protocolAddress
+    )
+  ).to.changeTokenBalances(
+    ERC20Mock,
+    [treasuryAddress, protocolAddress],
+    [
+      -expectedERC20AmountForProtocolBigNumber,
+      expectedERC20AmountForProtocolBigNumber
+    ]
+  )
+
+  /**
+   * Native transactions
+   */
+
+  const valueFloat = 0.03
+  const expectedValueFloatSponsee = valueFloat * (1 - protocolFee / 100)
+  const expectedValueFloatProtocol = valueFloat * (protocolFee / 100)
+
+  const value = parseEther(`${valueFloat}`)
+
+  const expectedEthAmountForProtocol = parseEther(
+    `${expectedValueFloatProtocol}`
+  )
+
+  await expect(
+    DSponsorNFTContract.connect(sponsee).setPrice(ZERO_ADDRESS, true, value)
+  )
+    .to.emit(DSponsorNFTContract, 'MintPriceChange')
+    .withArgs(ZERO_ADDRESS, true, value)
+
+  await expect(
+    DSponsorNFTContract.connect(sponsor2).payAndMint(
+      ZERO_ADDRESS,
+      sponsor2.address,
+      '',
+      { value }
+    )
+  ).to.changeEtherBalances([sponsor2.address], [parseEther(`-${valueFloat}`)])
+
+  await expect(
+    TreasuryContract.connect(sponsee)['release(address)'](sponsee.address)
+  ).to.changeEtherBalances(
+    [treasuryAddress, sponsee],
+    [
+      parseEther(`-${expectedValueFloatSponsee}`),
+      parseEther(`${expectedValueFloatSponsee}`)
+    ]
+  )
+
+  await expect(
+    TreasuryContract.connect(sponsee)['release(address)'](sponsee.address)
+  ).to.be.revertedWith('PaymentSplitter: account is not due payment')
+
+  expect(
+    await TreasuryContract['releasable(address)'](protocolAddress)
+  ).to.be.equal(expectedEthAmountForProtocol)
+
+  await expect(
+    TreasuryContract['release(address)'](protocolAddress)
+  ).to.changeEtherBalances(
+    [treasuryAddress, protocolAddress],
+    [parseEther(`-${expectedValueFloatProtocol}`), expectedEthAmountForProtocol]
+  )
+
+  return DSponsorNFTContract
+}
+
+async function DSponsorTests({
+  creationTx,
+
   DSponsorDeployer,
+
   ERC721Contract,
+
+  sponsee,
   sponsor1, // own token 1
-  sponsor2, // own token 2
-  sponsee
+  sponsor2 // own token 2
 }) {
   const propKey = 'propKey'
   const propValue = 'value'
@@ -106,12 +323,12 @@ describe('DSponsor - Main', function () {
 
       ERC20Mock,
       ERC721Mock,
+
       PaymentSplitterMockDeployer,
+      DSponsorNFTDeployer,
 
       DSponsorMainContract,
-
       DSponsorDeployer,
-      DSponsorNFTDeployer,
 
       protocolAddress,
       protocolFee
@@ -122,12 +339,16 @@ describe('DSponsor - Main', function () {
     const {
       PaymentSplitterMockDeployer,
       DSponsorNFTDeployer,
+
       DSponsorMainContract,
-      sponsee,
+
       ERC20Mock,
       ERC20Amount,
+
+      sponsee,
       sponsor1,
       sponsor2,
+
       protocolAddress,
       protocolFee
     } = await loadFixture(initFixture)
@@ -145,108 +366,28 @@ describe('DSponsor - Main', function () {
 
     creationTx = await creationTx.wait()
 
-    const { args } = creationTx.events.find((e) => e.event === 'NewDSponsorNFT')
-
-    const DSponsorNFTAddress = args[0]
-    const treasuryAddress = args[2]
-
-    const DSponsorNFTContract = await DSponsorNFTDeployer.attach(
-      DSponsorNFTAddress
-    )
-
-    expect(await DSponsorNFTContract.getController()).to.be.equal(
-      sponsee.address
-    )
-
-    await expect(
-      DSponsorNFTContract.setPrice(ERC20Mock.address, true, ERC20Amount)
-    ).to.be.revertedWithCustomError(
-      DSponsorNFTContract,
-      'ForbiddenControllerOperation'
-    )
-
-    await expect(
-      DSponsorNFTContract.connect(sponsee).setPrice(
-        ERC20Mock.address,
-        true,
-        ERC20Amount
-      )
-    )
-      .to.emit(DSponsorNFTContract, 'MintPriceChange')
-      .withArgs(ERC20Mock.address, true, ERC20Amount)
-
-    let tx = await ERC20Mock.connect(sponsor1).approve(
-      DSponsorNFTContract.address,
-      ERC20Amount * 20
-    )
-    await tx.wait()
-    tx = await ERC20Mock.connect(sponsor2).approve(
-      DSponsorNFTContract.address,
-      ERC20Amount * 20
-    )
-    await tx.wait()
-
-    await expect(
-      DSponsorNFTContract.connect(sponsor1).payAndMint(
-        ERC20Mock.address,
-        sponsor1.address,
-        ''
-      )
-    )
-      .to.emit(DSponsorNFTContract, 'Mint')
-      .withArgs(
-        ERC20Mock.address,
-        ERC20Amount,
-        sponsor1.address,
-        '',
-        sponsor1.address,
-        0
-      )
-
-    await expect(
-      DSponsorNFTContract.connect(sponsor2).payAndMint(
-        ERC20Mock.address,
-        sponsor2.address,
-        ''
-      )
-    ).to.changeTokenBalances(DSponsorNFTContract, [sponsor2.address], [1])
-
-    await expect(
-      DSponsorNFTContract.connect(sponsor2).payAndMint(
-        ERC20Mock.address,
-        sponsor2.address,
-        ''
-      )
-    ).to.changeTokenBalances(ERC20Mock, [sponsor2.address], [-ERC20Amount])
-
-    const TreasuryContract = await PaymentSplitterMockDeployer.attach(
-      treasuryAddress
-    )
-
-    // release with sponsor = 0
-
-    /*
-
-    await expect(
-      TreasuryContract.connect(sponsee).release(
-        //  ERC20Mock.address,
-        sponsee.address
-      )
-    ).to.changeTokenBalances(
+    await DSponsorNFTTests({
+      PaymentSplitterMockDeployer,
+      creationTx,
+      DSponsorNFTDeployer,
+      sponsee,
+      sponsor1,
+      sponsor2,
       ERC20Mock,
-      [treasuryAddress, sponsee],
-      [ERC20Amount]
-    )
-    */
-
-    // releasable protocol
+      ERC20Amount,
+      protocolFee,
+      protocolAddress
+    })
   })
 
   it('Creates a valid DSponso contract from an ERC721 contract address', async function () {
     const {
-      ERC721Mock,
-      DSponsorMainContract,
       DSponsorDeployer,
+
+      ERC721Mock,
+
+      DSponsorMainContract,
+
       sponsee,
       sponsor1,
       sponsor2
@@ -265,7 +406,7 @@ describe('DSponsor - Main', function () {
     tx = await ERC721Mock.connect(sponsor2).mint(2)
     await tx.wait()
 
-    await testDSponsoTests({
+    await DSponsorTests({
       creationTx,
       DSponsorDeployer,
       ERC721Contract: ERC721Mock,
@@ -277,11 +418,21 @@ describe('DSponsor - Main', function () {
 
   it('Creates valid DSponsoNFT and DSponso contracts', async function () {
     const {
+      PaymentSplitterMockDeployer,
+      DSponsorNFTDeployer,
+
       DSponsorMainContract,
       DSponsorDeployer,
+
       sponsee,
       sponsor1,
-      sponsor2
+      sponsor2,
+
+      ERC20Mock,
+      ERC20Amount,
+
+      protocolAddress,
+      protocolFee
     } = await loadFixture(initFixture)
 
     const name = 'name'
@@ -298,23 +449,26 @@ describe('DSponsor - Main', function () {
     )
     creationTx = await creationTx.wait()
 
-    /**
-     * Get NFT Contract
-     *
-     * Minting
-     *
-     * Test
-     */
+    const DSponsorNFT = await DSponsorNFTTests({
+      PaymentSplitterMockDeployer,
+      creationTx,
+      DSponsorNFTDeployer,
+      sponsee,
+      sponsor1,
+      sponsor2,
+      ERC20Mock,
+      ERC20Amount,
+      protocolFee,
+      protocolAddress
+    })
 
-    /*
-    await testDSponsoTests({
+    await DSponsorTests({
       creationTx,
       DSponsorDeployer,
-      ERC721Contract: DSponsoNFT,
+      ERC721Contract: DSponsorNFT,
       sponsor1,
       sponsor2,
       sponsee
     })
-    */
   })
 })
