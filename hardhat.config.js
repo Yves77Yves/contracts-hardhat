@@ -1,24 +1,49 @@
+require('dotenv').config()
 require('hardhat-contract-sizer')
 require('@nomicfoundation/hardhat-toolbox')
 require('@nomicfoundation/hardhat-chai-matchers')
 require('@nomiclabs/hardhat-ethers')
 require('@nomiclabs/hardhat-web3')
+require('@nomiclabs/hardhat-etherscan')
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: '0.8.9',
+  solidity: {
+    version: '0.8.9',
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  },
 
   networks: {
     hardhat: {
       chainId: 1337
+    },
+    mumbai: {
+      url: process.env.POLYGON_MUMBAI_RPC_PROVIDER,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY]
+    },
+    polygon: {
+      url: process.env.POLYGON_MAINNET_RPC_PROVIDER,
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY]
     }
-    // mumbai: {
-    //   url: "https://rpc-mumbai.matic.today",
-    //   accounts: [process.env.pk]
-    // },
-    // polygon: {
-    //   url: "https://polygon-rpc.com/",
-    //   accounts: [process.env.pk]
-    // }
+  },
+
+  etherscan: {
+    apiKey: {
+      //ethereum
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      ropsten: process.env.ETHERSCAN_API_KEY,
+      rinkeby: process.env.ETHERSCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
+      kovan: process.env.ETHERSCAN_API_KEY,
+
+      //polygon
+      polygon: process.env.POLYGONSCAN_API_KEY,
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY
+    }
   }
 }

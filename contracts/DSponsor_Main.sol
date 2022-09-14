@@ -101,7 +101,7 @@ contract DSponsorMain {
      * @param name ERC721 name for NFT contract to create
      * @param symbol ERC721 for NFT contract to create
      * @param maxSupply The max number of mintable ERC721 tokens
-     * @param beneficiary Controller who administrate sponsoring and will be able to withdraw funds from sales
+     * @param controller Addresss who administrate NFT pricing and will be able to withdraw funds from sales
      *
      * @return dSponsorNFTAddress The created contract address
      *
@@ -111,19 +111,19 @@ contract DSponsorMain {
         string memory name,
         string memory symbol,
         uint256 maxSupply,
-        address beneficiary
+        address controller
     ) public returns (address dSponsorNFTAddress) {
         address treasury = treasuryFactory.createDSponsorTreasuryFactory(
-            beneficiary
+            controller
         );
         dSponsorNFTAddress = nftFactory.createDSponsorNFT(
             name,
             symbol,
             maxSupply,
-            beneficiary,
+            controller,
             payable(treasury)
         );
-        emit NewDSponsorNFT(dSponsorNFTAddress, beneficiary, treasury);
+        emit NewDSponsorNFT(dSponsorNFTAddress, controller, treasury);
     }
 
     /* ****************

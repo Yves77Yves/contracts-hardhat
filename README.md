@@ -1,4 +1,4 @@
-# dSponsor contracts
+# d>sponsor contracts
 
 Build a community-owned ad inventory with dSponsor.
 As a media or a creator, set up your sponsorships tight to NFTs.
@@ -31,23 +31,29 @@ Notes :
 - 2% protocol fee on revenues
 - Need to manually withdraw funds from minting and secondary sales
 
-### DSponsorFactory.sol
+### DSponsor_Main.sol
 
-Use this contract to create `DSponsor` and `DSponsorNFT`
+Use `DSponsorMain` contract to create `DSponsor` and `DSponsorNFT`
 
 - `createDSponsorNFT` to create a `DSponsorNFT` contract
 - `createFromContract` to create a `DSponsor` contract from existing ERC721 compliant contract
 - `createWithNewNFT` to create a `DSponsor` and a `DSponsorNFT` linked together
 
+## Use in testnet
+
+`DSponsorMain` contract is deployed to: [`0x8d1137542C2F1a07b59971814E0Db5fF5008099e`](https://mumbai.polygonscan.com/address/0x8d1137542c2f1a07b59971814e0db5ff5008099e)
+
+### Deployed contracts examples with `DSponsorMain`
+
+- DSponsor : [`0x6105010008a341fa07dd9047285937f518afcf37`](https://mumbai.polygonscan.com/address/0x6105010008a341fa07dd9047285937f518afcf37)
+
+- DSponsorNFT : [`0xe29f4c3b2d321539ab4955cd88a34ce3a52c49b6`](https://mumbai.polygonscan.com/address/0xe29f4c3b2d321539ab4955cd88a34ce3a52c49b6). Mint price set to 1 [DERC20](https://mumbai.polygonscan.com/address/0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1)
+
+- Treasury : [`0x622a9532248aefaf341bf59d568df1806b9af483`](https://mumbai.polygonscan.com/address/0x622a9532248aefaf341bf59d568df1806b9af483)
+
 ## Development
 
 _Install dependencies first with `npm i` command_
-
-### Run tests
-
-```shell
-npm run test
-```
 
 ### Check contracts sizes
 
@@ -55,6 +61,18 @@ The maximum size of a contract is restricted to 24 KB by EIP 170. Run this comma
 
 ```shell
 npm run sizes
+```
+
+### Run tests
+
+```shell
+npm run test
+```
+
+Check testing coverage with :
+
+```shell
+npm run coverage
 ```
 
 ### Security check with Slither
@@ -78,5 +96,33 @@ npm run analyze
 ### Deploy
 
 ```shell
-npm run deploy
+npm run deploy NETWORK
+```
+
+Example
+
+```shell
+npm run deploy localhost
+
+npm run deploy mumbai
+
+npm run deploy polygon
+```
+
+### Verify
+
+To verify main contract deployed, use :
+
+```shell
+npx hardhat verify MAIN_CONTRACT_ADDR --network NETWORK
+```
+
+To verify contracts deployed with main contract, use :
+
+```shell
+npx hardhat verify --constructor-args verif-args-examples/DSponsor.js DSPONSOR_CONTRACT_ADDR --network mumbai
+
+npx hardhat verify --constructor-args verif-args-examples/DSponsorPolygonNFT.js NFT_CONTRACT_ADDR --network mumbai
+
+npx hardhat verify --contract @openzeppelin/contracts/finance/PaymentSplitter.sol:PaymentSplitter --constructor-args verif-args-examples/Treasury.js TREASURY_CONTRACT_ADDR --network mumbai
 ```
