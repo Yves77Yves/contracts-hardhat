@@ -1,5 +1,6 @@
 require('dotenv').config()
 require('hardhat-contract-sizer')
+require('hardhat-gas-reporter')
 require('@nomicfoundation/hardhat-toolbox')
 require('@nomicfoundation/hardhat-chai-matchers')
 require('@nomiclabs/hardhat-ethers')
@@ -45,5 +46,16 @@ module.exports = {
       polygon: process.env.POLYGONSCAN_API_KEY,
       polygonMumbai: process.env.POLYGONSCAN_API_KEY
     }
+  },
+
+  gasReporter: {
+    enabled: true,
+
+    token: 'MATIC',
+    gasPriceApi:
+      'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice',
+
+    currency: 'EUR',
+    coinmarketcap: process.env.COINMARKETCAP_KEY
   }
 }

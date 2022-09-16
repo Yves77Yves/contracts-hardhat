@@ -69,8 +69,6 @@ describe('DSponsor', function () {
 
     const SET_PROPERTIES_ROLE = await DSponsorContract.SET_PROPERTIES_ROLE()
     const VALIDATE_ROLE = await DSponsorContract.VALIDATE_ROLE()
-    const MAX_SPONSOR_STRING_DATA_LENGTH =
-      await DSponsorContract.MAX_SPONSOR_STRING_DATA_LENGTH()
 
     return {
       deployer,
@@ -89,8 +87,7 @@ describe('DSponsor', function () {
       DSponsorDeployer,
 
       SET_PROPERTIES_ROLE,
-      VALIDATE_ROLE,
-      MAX_SPONSOR_STRING_DATA_LENGTH
+      VALIDATE_ROLE
     }
   }
 
@@ -223,40 +220,6 @@ describe('DSponsor', function () {
       expect(
         await DSponsorContract.getSponsoData(2, properties[0])
       ).to.be.deep.equal(['', newPropValue, ''])
-    })
-
-    it('Protects against too long sponsoring data', async function () {
-      const {
-        sponsor1,
-        properties,
-        DSponsorContract,
-        MAX_SPONSOR_STRING_DATA_LENGTH
-      } = await loadFixture(initFixture)
-
-      let newPropValue = ''.padStart(MAX_SPONSOR_STRING_DATA_LENGTH, '#')
-
-      await expect(
-        DSponsorContract.connect(sponsor1).setSponsoData(
-          1,
-          properties[0],
-          newPropValue
-        )
-      )
-        .to.emit(DSponsorContract, 'NewSponsoData')
-        .withArgs(1, properties[0], newPropValue)
-
-      newPropValue = newPropValue + '#'
-
-      await expect(
-        DSponsorContract.connect(sponsor1).setSponsoData(
-          1,
-          properties[0],
-          newPropValue
-        )
-      ).to.be.revertedWithCustomError(
-        DSponsorContract,
-        'StringLengthExceedLimit'
-      )
     })
 
     it('Protects against unallowed property for data submission', async function () {

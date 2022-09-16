@@ -16,8 +16,19 @@ contract DSponsorTreasuryFactory {
      * @notice This wallet can collect protocol fees from a
      * a {PaymentSplitter} contract
      */
-    address public constant PROTOCOL_ADDRESS_FEE =
-        0x64E8f7C2B4fd33f5E8470F3C6Df04974F90fc2cA;
+    address public immutable PROTOCOL_ADDRESS_FEE;
+
+    constructor() {
+        uint256 chainId = block.chainid;
+        PROTOCOL_ADDRESS_FEE = chainId == 1 || // Ethereum
+            chainId == 100 || // Gnosis
+            chainId == 137 || // Polygon
+            chainId == 42161 || // Arbitrum
+            chainId == 5 || // Goerli
+            chainId == 4 // Rinkeby
+            ? 0x5b15Cbb40Ef056F74130F0e6A1e6FD183b14Cdaf
+            : 0x64E8f7C2B4fd33f5E8470F3C6Df04974F90fc2cA;
+    }
 
     /**
      * @param beneficiary Shares funds with DSponsor protocol (98%-2%)

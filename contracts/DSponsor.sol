@@ -39,9 +39,6 @@ contract DSponsor is AccessControl, ContextMixin, IDSponsor {
         keccak256("SET_PROPERTIES_ROLE");
     bytes32 public constant VALIDATE_ROLE = keccak256("VALIDATE_ROLE");
 
-    /// @notice Avoid high storage cost and protect against sort of "DDoS" attack
-    uint256 public constant MAX_SPONSOR_STRING_DATA_LENGTH = 100;
-
     /** @notice Sponsoring conditions, expected to be an immutable document
      * stored on IPFS or Arweave (but it's not required)
      */
@@ -66,12 +63,6 @@ contract DSponsor is AccessControl, ContextMixin, IDSponsor {
     /* ****************
      *  MODIFIERS
      *****************/
-
-    modifier limitStringLength(string memory s) {
-        if (bytes(s).length > MAX_SPONSOR_STRING_DATA_LENGTH)
-            revert StringLengthExceedLimit();
-        _;
-    }
 
     modifier onlyAllowedProperty(bytes32 property) {
         if (!_isAllowedProperty(property)) revert UnallowedProperty();
@@ -137,7 +128,6 @@ contract DSponsor is AccessControl, ContextMixin, IDSponsor {
      * @param tokenId - Concerned token
      * @param property - Concerned property
      * @param data - Can be any string
-     * but cannot exceed have a length greater than {MAX_SPONSOR_STRING_DATA_LENGTH}
      *
      * Emits {NewSponsoData} event
      */
@@ -145,7 +135,7 @@ contract DSponsor is AccessControl, ContextMixin, IDSponsor {
         uint256 tokenId,
         string memory property,
         string memory data
-    ) external onlySponsor(tokenId) limitStringLength(data) {
+    ) external onlySponsor(tokenId) {
         _setSponsoData(tokenId, _propertyStringToBytes32(property), data);
         emit NewSponsoData(tokenId, property, data);
     }

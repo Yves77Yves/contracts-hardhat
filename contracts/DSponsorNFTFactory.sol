@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "./DSponsorNFT_PolygonOptimized.sol";
+import "./DSponsorNFT.sol";
 
 /**
  * @title DSponsorNFT factory
@@ -19,13 +19,7 @@ contract DSponsorNFTFactory {
         return
             address(
                 // @dev Should change contract file according to chain
-                new DSponsorNFT_PolygonOptimized(
-                    name,
-                    symbol,
-                    maxSupply,
-                    controller,
-                    treasury
-                )
+                new DSponsorNFT(name, symbol, maxSupply, controller, treasury)
             );
     }
 }
