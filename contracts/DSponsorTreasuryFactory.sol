@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
  */
 contract DSponsorTreasuryFactory {
     /// @notice Protocol to receive 2% fees on revenues
-    uint256 public constant PROTOCOL_PERCENT_FEE = 2;
+    uint256 public constant PROTOCOL_PERCENT_FEE = 4;
 
     /***
      * @notice This wallet can collect protocol fees from a
@@ -24,8 +24,7 @@ contract DSponsorTreasuryFactory {
             chainId == 100 || // Gnosis
             chainId == 137 || // Polygon
             chainId == 42161 || // Arbitrum
-            chainId == 5 || // Goerli
-            chainId == 4 // Rinkeby
+            chainId == 5 // Goerli
             ? 0x5b15Cbb40Ef056F74130F0e6A1e6FD183b14Cdaf
             : 0x64E8f7C2B4fd33f5E8470F3C6Df04974F90fc2cA;
     }

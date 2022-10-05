@@ -1,9 +1,11 @@
 # d>sponsor contracts
 
-Build a community-owned ad inventory with dSponsor.
+Build a community-owned ad inventory with d>sponsor.
 As a media or a creator, set up your sponsorships tight to NFTs.
 
-## Features
+![logo d>sponsor](assets/schema%20dsponsor.png)
+
+## Contracts features
 
 ### DSponsor.sol
 
@@ -43,13 +45,13 @@ Use `DSponsorMain` contract to create `DSponsor` and `DSponsorNFT`
 
 `DSponsorMain` contract is deployed to: [`0x8d1137542C2F1a07b59971814E0Db5fF5008099e`](https://mumbai.polygonscan.com/address/0x8d1137542c2f1a07b59971814e0db5ff5008099e)
 
-### Deployed contracts examples with `DSponsorMain`
+### Examples - Deployed contracts via [`DSponsorMain`](https://mumbai.polygonscan.com/address/0x8d1137542c2f1a07b59971814e0db5ff5008099e) methods on Polygon Mumbai
 
-- DSponsor : [`0x6105010008a341fa07dd9047285937f518afcf37`](https://mumbai.polygonscan.com/address/0x6105010008a341fa07dd9047285937f518afcf37)
-
-- DSponsorNFT : [`0xe29f4c3b2d321539ab4955cd88a34ce3a52c49b6`](https://mumbai.polygonscan.com/address/0xe29f4c3b2d321539ab4955cd88a34ce3a52c49b6). Mint price set to 1 [DERC20](https://mumbai.polygonscan.com/address/0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1)
-
-- Treasury : [`0x622a9532248aefaf341bf59d568df1806b9af483`](https://mumbai.polygonscan.com/address/0x622a9532248aefaf341bf59d568df1806b9af483)
+| Contract    | Address                                                                                                                           | Infos                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| DSponsor    | [`0x6105010008a341fa07dd9047285937f518afcf37`](https://mumbai.polygonscan.com/address/0x6105010008a341fa07dd9047285937f518afcf37) |                                                                                                                 |
+| DSponsorNFT | [`0xe29f4c3b2d321539ab4955cd88a34ce3a52c49b6`](https://mumbai.polygonscan.com/address/0xe29f4c3b2d321539ab4955cd88a34ce3a52c49b6) | Mint price set to 1 [DERC20](https://mumbai.polygonscan.com/address/0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1) |
+| Treasury    | [`0x622a9532248aefaf341bf59d568df1806b9af483`](https://mumbai.polygonscan.com/address/0x622a9532248aefaf341bf59d568df1806b9af483) |
 
 ## Development
 
