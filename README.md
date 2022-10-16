@@ -30,7 +30,7 @@ Although any ERC721 compliant contract is compatible with `DSponsor` contract, a
 Notes :
 
 - Anyone can mint if payment requirements are met
-- 2% protocol fee on revenues
+- 4% protocol fee on revenues
 - Need to manually withdraw funds from minting and secondary sales
 
 ### DSponsor_Main.sol
@@ -55,7 +55,15 @@ Use `DSponsorMain` contract to create `DSponsor` and `DSponsorNFT`
 
 ## Development
 
-_Install dependencies first with `npm i` command_
+### Set up environment
+
+```
+# 1- Environment variables are used for tests & deployment
+cp .env_example .env
+
+# 2- Install dependencies
+npm i
+```
 
 ### Check contracts sizes
 
@@ -68,7 +76,7 @@ npm run sizes
 ### Run tests
 
 ```shell
-npm run test
+npm run test # with gas reports according hardhat.config.js
 ```
 
 Check testing coverage with :

@@ -18,7 +18,6 @@ contract DSponsorNFTFactory {
     ) external returns (address) {
         return
             address(
-                // @dev Should change contract file according to chain
                 new DSponsorNFT(name, symbol, maxSupply, controller, treasury)
             );
     }

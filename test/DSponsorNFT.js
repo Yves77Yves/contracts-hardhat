@@ -354,6 +354,115 @@ describe('DSponsorNFT', function () {
       )
     })
 
+    it('Can be minted for free', async function () {
+      const { owner2, user2, treasury, controller, ERC20Mock, DSponsorNFT } =
+        await loadFixture(initFixture)
+      const referralData = 'referralData'
+      const tokenId = 1
+
+      const totalSupply = await DSponsorNFT.totalSupply()
+
+      const ERC20balanceOfUser2 = await ERC20Mock.balanceOf(user2.address)
+      const ERC20balanceOfTreasury = await ERC20Mock.balanceOf(treasury.address)
+
+      const NFTbalanceOfOwner2 = await DSponsorNFT.balanceOf(owner2.address)
+      const NFTbalanceOfUser2 = await DSponsorNFT.balanceOf(user2.address)
+      const NFTbalanceOfTreasury = await DSponsorNFT.balanceOf(treasury.address)
+
+      let tx = await DSponsorNFT.connect(controller).setPrice(
+        ERC20Mock.address,
+        true,
+        0
+      )
+      await tx.wait()
+
+      tx = await DSponsorNFT.connect(controller).setPrice(ZERO_ADDRESS, true, 0)
+      await tx.wait()
+
+      await expect(
+        DSponsorNFT.connect(user2).payAndMint(
+          ZERO_ADDRESS,
+          owner2.address,
+          referralData
+        )
+      )
+        .to.emit(DSponsorNFT, 'Mint')
+        .withArgs(
+          ZERO_ADDRESS,
+          0,
+          owner2.address,
+          referralData,
+          user2.address,
+          tokenId
+        )
+
+      tx = await DSponsorNFT.connect(controller).setPrice(ZERO_ADDRESS, true, 0)
+      await tx.wait()
+
+      await expect(
+        DSponsorNFT.connect(user2).payAndMint(
+          ERC20Mock.address,
+          owner2.address,
+          referralData
+        )
+      )
+        .to.emit(DSponsorNFT, 'Mint')
+        .withArgs(
+          ERC20Mock.address,
+          0,
+          owner2.address,
+          referralData,
+          user2.address,
+          tokenId + 1
+        )
+
+      expect(await ERC20Mock.balanceOf(user2.address)).to.be.equal(
+        ERC20balanceOfUser2
+      )
+
+      expect(await ERC20Mock.balanceOf(treasury.address)).to.be.equal(
+        ERC20balanceOfTreasury
+      )
+
+      expect(await DSponsorNFT.balanceOf(owner2.address)).to.be.equal(
+        NFTbalanceOfOwner2.add(2)
+      )
+
+      expect(await DSponsorNFT.balanceOf(user2.address)).to.be.equal(
+        NFTbalanceOfUser2
+      )
+
+      expect(await DSponsorNFT.balanceOf(treasury.address)).to.be.equal(
+        NFTbalanceOfTreasury
+      )
+
+      expect(await DSponsorNFT.totalSupply()).to.be.equal(totalSupply.add(2))
+
+      await expect(
+        DSponsorNFT.connect(user2).payAndMint(
+          ERC20Mock.address,
+          owner2.address,
+          referralData
+        )
+      ).to.changeTokenBalances(
+        ERC20Mock,
+        [user2.address, treasury.address, owner2.address],
+        [0, 0, 0]
+      )
+
+      await expect(
+        DSponsorNFT.connect(user2).payAndMint(
+          ERC20Mock.address,
+          owner2.address,
+          referralData
+        )
+      ).to.changeTokenBalances(
+        DSponsorNFT,
+        [user2.address, treasury.address, owner2.address],
+        [0, 0, 1]
+      )
+    })
+
     it('Reverts if not enough available amount to spend', async function () {
       const {
         controller,

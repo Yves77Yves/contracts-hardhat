@@ -67,6 +67,7 @@ contract DSponsorMain {
      *
      * @param rulesURI Document with sponsoring conditions. IPFS or Arweave links recommended
      * @param sponsee Controller who administrate sponsoring and will be able to withdraw funds from sales
+     
      *
      * Emits {NewDSponsor} and {NewDSponsorNFT} events
      */

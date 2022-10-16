@@ -116,7 +116,7 @@ contract DSponsorNFT is
      * - Will revert if the contract cannot transfer corresponding price `amount`
      * (deployed contract needs spending allowance if `currency` is ERC20, see {IERC20-approve})
      * - Reentrency protection against {Address-sendValue},
-     * {ERC721-_safeMint} ({IERC721Receiver-onERC721Received}), and{IERC20-safeTransferFrom}
+     * {ERC721-_safeMint}, ({IERC721Receiver-onERC721Received}), and{IERC20-safeTransferFrom}
      *
      * Emits a {Mint} and {IERC721-Transfer} events.
      */
@@ -136,32 +136,15 @@ contract DSponsorNFT is
         if (amount > 0) {
             if (currency == address(0)) Address.sendValue(TREASURY, amount);
             else {
-                IERC20 currencyERC20 = IERC20(currency);
-
                 /*
-                uint256 balanceOfMsgSender = currencyERC20.balanceOf(
-                    _msgSender()
-                );
-                uint256 balanceOfTreasury = currencyERC20.balanceOf(TREASURY);
-                */
-
-                currencyERC20.safeTransferFrom(_msgSender(), TREASURY, amount);
-
-                /*
-                 * @dev We decide to remove intensive checks.
-                 * Controller is responsible to set
-                 * a valid contract as currency.
-                 * This function could work (but not as expected)
-                 * with some contract as ERC721 compliant (tokenId as amount)
+                 * @dev Controller is responsible to set a valid contract as currency.
+                 * If this function does not revert, we assume it transfered tokens as expected
                  */
-                /*
-                if (
-                    (currencyERC20.balanceOf(_msgSender()) !=
-                        (balanceOfMsgSender - amount)) ||
-                    (currencyERC20.balanceOf(TREASURY) !=
-                        (balanceOfTreasury + amount))
-                ) revert InvalidERC20Transfer();            
-                */
+                IERC20(currency).safeTransferFrom(
+                    _msgSender(),
+                    TREASURY,
+                    amount
+                );
             }
         }
 

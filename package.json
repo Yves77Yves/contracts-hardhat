@@ -30,6 +30,6 @@
     "coverage": "npx hardhat coverage",
     "deploy": "npx hardhat run scripts/deploy.js --network",
     "sizes": "npx hardhat size-contracts",
-    "test": "GAS_REPORT=true npx hardhat test"
+    "test": "npx hardhat test"
   }
 }

@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
  * @notice Create {PaymentSplitter} contract with shares for DSponsor protocol
  */
 contract DSponsorTreasuryFactory {
-    /// @notice Protocol to receive 2% fees on revenues
+    /// @notice Protocol to receive 4% fees on revenues
     uint256 public constant PROTOCOL_PERCENT_FEE = 4;
 
     /***
@@ -30,7 +30,7 @@ contract DSponsorTreasuryFactory {
     }
 
     /**
-     * @param beneficiary Shares funds with DSponsor protocol (98%-2%)
+     * @param beneficiary Shares funds with DSponsor protocol (96%-4%)
      *
      * @notice Returns a {PaymentSplitter} contract. *
      * A payee should invoke {PaymentSplitter-release} to withdraw.
