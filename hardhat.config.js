@@ -23,14 +23,17 @@ module.exports = {
     hardhat: {
       chainId: 1337
     },
+
     mumbai: {
       url: process.env.POLYGON_MUMBAI_RPC_PROVIDER,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY]
-    },
+    }
+    /*
     polygon: {
       url: process.env.POLYGON_MAINNET_RPC_PROVIDER,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY]
     }
+    */
   },
 
   etherscan: {
@@ -49,7 +52,7 @@ module.exports = {
   },
 
   gasReporter: {
-    enabled: true,
+    enabled: false,
 
     token: 'MATIC',
     gasPriceApi:
