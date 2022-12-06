@@ -15,6 +15,9 @@ interface IDSponsor {
         string reason
     );
     event PropertyUpdate(string indexed property, bool indexed allowed);
+    
+    event ValidityPeriodUpdate(uint256 start, uint256 end); 
+     
 
     error NoDataSubmitted();
     error SponseeCannotBeZeroAddress();
@@ -23,6 +26,9 @@ interface IDSponsor {
     error UnallowedSponsorOperation();
 
     function setProperty(string memory propertyString, bool allowed) external;
+
+    function setValidityPeriod(uint256 start, uint256 end) external;
+
 
     function setSponsoData(
         uint256 tokenId,
@@ -47,6 +53,11 @@ interface IDSponsor {
             string memory lastDataSubmitted,
             string memory lastRejectionReason
         );
+
+        
+    function getStartPeriod() external returns (uint);
+    
+    function getEndPeriod() external returns (uint);
 
     function isAllowedProperty(string memory propertyString)
         external
